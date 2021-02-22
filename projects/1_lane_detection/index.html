@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>Sheelabhadra Dey | Lane Detection</title>
+  <meta name="description" content="Personal Website">
+
+  <!-- Fonts and Icons -->
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:100,300,400,500,700|Material+Icons" />
+
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="/assets/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/academicons.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="canonical" href="/projects/1_lane_detection/">
+</head>
+<body>
+  <!-- Header -->
+  <nav id="navbar" class="navbar fixed-top navbar-expand-md grey lighten-5 z-depth-1 navbar-light">
+    <div class="container-fluid p-0">
+      
+        <a class="navbar-brand title font-weight-lighter" href="/"><span class="font-weight-bold">Sheel</span> Dey</a>
+      
+      <button class="navbar-toggler ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse text-right" id="navbarNav">
+        <ul class="navbar-nav ml-auto flex-nowrap">
+          <li class="nav-item ">
+            <a class="nav-link" href="/">
+              About
+              
+            </a>
+          </li>
+          
+            
+          
+            
+              <li class="nav-item ">
+                  <a class="nav-link" href="/blog/">
+                    Blog
+                    
+                  </a>
+              </li>
+            
+          
+            
+              <li class="nav-item ">
+                  <a class="nav-link" href="/cv/">
+                    Curriculum Vitae
+                    
+                  </a>
+              </li>
+            
+          
+            
+          
+            
+              <li class="nav-item ">
+                  <a class="nav-link" href="/projects/">
+                    Projects
+                    
+                  </a>
+              </li>
+            
+          
+            
+              <li class="nav-item ">
+                  <a class="nav-link" href="/publications/">
+                    Publications
+                    
+                  </a>
+              </li>
+            
+          
+            
+          
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Scrolling Progress Bar -->
+  <progress id="progress" value="0">
+    <div class="progress-container">
+      <span class="progress-bar"></span>
+    </div>
+  </progress>
+
+  <!-- Content -->
+  <div class="content">
+    
+  <h1>Lane Detection</h1>
+  <h3>Finding Lane Lines on the Road</h2>
+
+
+<p><br />
+I did this project as a part of the Udacity Self-Driving Car Nanodegree program. It is an implementation in Python 3 to detect lane lines on the road. In this blog post I have described the pipeline to achieve this task. The complete code for the project is available <a href="https://github.com/sheelabhadra/CarND-LaneLines-P1">here</a>.</p>
+
+<h3 id="description-of-the-pipeline"><strong>Description of the pipeline</strong></h3>
+<hr />
+
+<p>My pipeline consists of 6 steps. For illustration I have used an example image shown below to show the effect of all the operations in my pipeline.</p>
+
+<p align="center">
+  <img src="/assets/img/lane_detection/original_image.jpg" />
+</p>
+
+<h4 id="1-color-to-grayscale-conversion">1. Color to grayscale conversion</h4>
+
+<p>The color image is converted to grayscale to make the computation easier and to detect lane lines of any color.</p>
+
+<p align="center">
+  <img src="/assets/img/lane_detection/grayscale.jpg" />
+</p>
+
+<h4 id="2-gaussian-blur">2. Gaussian blur</h4>
+
+<p>Gaussian blur is applied on the grayscaled image to remove noise and spurious gradients. Gradients are calulated by the change in the intensity of gray value between adjacent pixels. More information about OpenCV’s Gaussian blur can be found <a href="http://docs.opencv.org/2.4/modules/imgproc/doc/filtering.html?highlight=gaussianblur#gaussianblur">here</a>. I used a kernel size of 3 for Gaussian blur since the Canny edge detector (described next) already includes Gaussian smoothing.</p>
+
+<p align="center">
+  <img src="/assets/img/lane_detection/Gaussian_blur.jpg" />
+</p>
+
+<h4 id="3-canny-transform">3. Canny transform</h4>
+
+<p><a href="http://docs.opencv.org/trunk/da/d22/tutorial_py_canny.html">Canny edge detection</a> is applied to the Gaussian-blurred image. This allows us to detect edges on the basis of change in the gradient intensity and direction at every pixel. The algorithm will first detect strong edge (strong gradient) pixels above the <code class="highlighter-rouge">high_threshold</code>, and reject pixels below the <code class="highlighter-rouge">low_threshold</code>. Next, pixels with values between the <code class="highlighter-rouge">low_threshold</code> and <code class="highlighter-rouge">high_threshold</code> will be included as long as they are connected to strong edges. The output edges is a binary image with white pixels tracing out the detected edges and black everywhere else. I used a <code class="highlighter-rouge">low_threshold</code> value of <code class="highlighter-rouge">50</code> and a <code class="highlighter-rouge">high_threshold</code> value of <code class="highlighter-rouge">150</code>.</p>
+
+<p align="center">
+  <img src="/assets/img/lane_detection/Canny_edges.jpg" />
+</p>
+
+<h4 id="4-region-of-interest-mask">4. Region of interest mask</h4>
+
+<p>A mask is drawn to select only the relevant region in which there is a possibility of lane lines being present. This would be generally a quadrilateral shaped region in the bottom half of the image. The mask selects the white colors (edges) from the image obtained after applying Canny transformation using a bitwise and operation.</p>
+
+<p align="center">
+  <img src="/assets/img/lane_detection/masked_image.jpg" />
+</p>
+
+<h4 id="5-hough-transform">5. Hough transform</h4>
+
+<p><a href="https://alyssaq.github.io/2014/understanding-hough-transform/">Hough transform</a> is applied on the the image obtained after applying the region of interest mask. The probabilisitc Hough transform is used to construct line segments using the edge points detected in the previous step. More information about using Hough transform can be found <a href="http://docs.opencv.org/3.0-beta/doc/py_tutorials/py_imgproc/py_houghlines/py_houghlines.html">here</a>. The edges are segments colored in red. The coordinates of the end points of the line segments are returned by the Hough transform function.</p>
+
+<p align="center">
+  <img src="/assets/img/lane_detection/line_edges.jpg" />
+</p>
+
+<h4 id="6-drawing-lane-lines">6. Drawing lane lines</h4>
+
+<p>The line segments obtained in the previous step are extrapolated to draw straight red colored lines along the lane lines. This is accomplished by modifying the <code class="highlighter-rouge">draw_lines()</code> function in the following ways:</p>
+
+<ul>
+  <li>
+    <p>The slope of each line segment is calculated using the formula <code class="highlighter-rouge">(y2-y1)/(x2-x1)</code>.</p>
+  </li>
+  <li>
+    <p>The slope of the lane lines lie within a particular range and this information is helpul in rejecting spurious line segments. I used a range of (0.5, 2.5) for the left lane line and (-2.5,-0.5) for the right lane line. Line segments with slope values outside of these range were ignored. The coordinates belonging to the left lane line were put into arrays <code class="highlighter-rouge">left_lane_x</code>, <code class="highlighter-rouge">left_lane_y</code> and the coordinates belonging to the right lane line were put into arrays <code class="highlighter-rouge">right_lane_x</code>, <code class="highlighter-rouge">right_lane_y</code>.</p>
+  </li>
+  <li>
+    <p>The np.polyfit() function is helpful in constructing a line given a set of points. More information on this function can be found <a href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.polyfit.html">here</a>. The degree was set to 1 and was applied to the arrays <code class="highlighter-rouge">left_lane_x</code>, <code class="highlighter-rouge">left_lane_y</code> to find the slope and intercept values of the left lane line and to the arrays <code class="highlighter-rouge">right_lane_x</code>, <code class="highlighter-rouge">right_lane_y</code> to find the slope and intercept values of the right lane line.</p>
+  </li>
+  <li>
+    <p>The points of intersection of the 2 lane lines with the region of interest were calculated and the lane lines were drawn only inside the region of interest.</p>
+  </li>
+</ul>
+
+<p align="center">
+  <img src="/assets/img/lane_detection/lane_lines.jpg" />
+</p>
+
+<h4 id="project-video">Project Video</h4>
+<p><br /></p>
+<p align="center">
+	<iframe width="500" height="300" src="https://www.youtube.com/embed/q_gZGQMwX00" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe>
+</p>
+<p><br /></p>
+<h3 id="potential-shortcomings"><strong>Potential shortcomings</strong></h3>
+<hr />
+
+<ul>
+  <li>If the intensity of the lane lines varies a lot in the video due to different angles of the sun, then my pipeline does not perform well.</li>
+  <li>If there are portions of the entire road that are white in color then the lane lines are not identified correctly.</li>
+  <li>The lane lines are not stable at times when a few outlier points are detected.</li>
+  <li>Due to the shortcoming mentioned above my pipeline performs awfully on the <code class="highlighter-rouge">challenge.mp4</code> video.</li>
+  <li>My pipeline will not work on roads that do not contain lane markings</li>
+</ul>
+
+<h3 id="possible-improvements"><strong>Possible improvements</strong></h3>
+<hr />
+
+<ul>
+  <li>A possible improvement would be to track the yellow lane line by using color masking.</li>
+  <li>The lane lines can be smoothed by keeping track of the lane lines in the previous video frames.</li>
+</ul>
+
+
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    &copy; Copyright 2021 Sheelabhadra Dey.
+    
+    
+  </footer>
+
+  <!-- Core JavaScript Files -->
+  <script src="/assets/js/jquery.min.js" type="text/javascript"></script>
+  <script src="/assets/js/popper.min.js" type="text/javascript"></script>
+  <script src="/assets/js/bootstrap.min.js" type="text/javascript"></script>
+  <script src="/assets/js/mdb.min.js" type="text/javascript"></script>
+  <script async="" src="https://cdnjs.cloudflare.com/ajax/libs/masonry/4.2.2/masonry.pkgd.min.js" integrity="sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/imagesloaded@4/imagesloaded.pkgd.min.js"></script>
+  <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML"></script>
+  <script src="/assets/js/common.js"></script>
+
+  <!-- Scrolling Progress Bar -->
+  <script type="text/javascript">
+    $(document).ready(function() {
+      var navbarHeight = $('#navbar').outerHeight(true);
+      $('body').css({ 'padding-top': navbarHeight });
+      $('progress-container').css({ 'padding-top': navbarHeight });
+      var progressBar = $('#progress');
+      progressBar.css({ 'top': navbarHeight });
+      var getMax = function() { return $(document).height() - $(window).height(); }
+      var getValue = function() { return $(window).scrollTop(); }   
+      // Check if the browser supports the progress element.
+      if ('max' in document.createElement('progress')) {
+        // Set the 'max' attribute for the first time.
+        progressBar.attr({ max: getMax() });
+        progressBar.attr({ value: getValue() });
+    
+        $(document).on('scroll', function() {
+          // On scroll only the 'value' attribute needs to be calculated.
+          progressBar.attr({ value: getValue() });
+        });
+
+        $(window).resize(function() {
+          var navbarHeight = $('#navbar').outerHeight(true);
+          $('body').css({ 'padding-top': navbarHeight });
+          $('progress-container').css({ 'padding-top': navbarHeight });
+          progressBar.css({ 'top': navbarHeight });
+          // On resize, both the 'max' and 'value' attributes need to be calculated.
+          progressBar.attr({ max: getMax(), value: getValue() });
+        });
+      } else {
+        var max = getMax(), value, width;
+        var getWidth = function() {
+          // Calculate the window width as a percentage.
+          value = getValue();
+          width = (value/max) * 100;
+          width = width + '%';
+          return width;
+        }
+        var setWidth = function() { progressBar.css({ width: getWidth() }); };
+        setWidth();
+        $(document).on('scroll', setWidth);
+        $(window).on('resize', function() {
+          // Need to reset the 'max' attribute.
+          max = getMax();
+          setWidth();
+        });
+      }
+    });
+  </script>
+
+  <!-- Code Syntax Highlighting -->
+  <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet">
+  <script src="/assets/js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Script Used for Randomizing the Projects Order -->
+  <!-- <script type="text/javascript">
+    $.fn.shuffleChildren = function() {
+      $.each(this.get(), function(index, el) {
+        var $el = $(el);
+        var $find = $el.children();
+
+        $find.sort(function() {
+          return 0.5 - Math.random();
+        });
+
+        $el.empty();
+        $find.appendTo($el);
+      });
+    };
+    $("#projects").shuffleChildren();
+  </script> -->
+
+  <!-- Project Cards Layout -->
+  <script type="text/javascript">
+    var $grid = $('#projects');
+
+    // $grid.masonry({ percentPosition: true });
+    // $grid.masonry('layout');
+
+    // Trigger after images load.
+    $grid.imagesLoaded().progress(function() {
+      $grid.masonry({ percentPosition: true });
+      $grid.masonry('layout');
+    });
+  </script>
+
+  <!-- Enable Tooltips -->
+  <script type="text/javascript">
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip()
+    })
+  </script>
+
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', '', 'auto');
+    ga('send', 'pageview');
+  </script>
+</body>
+</html>

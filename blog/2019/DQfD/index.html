@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>Sheelabhadra Dey | Deep Q-learning from Demonstrations</title>
+  <meta name="description" content="Personal Website">
+
+  <!-- Fonts and Icons -->
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:100,300,400,500,700|Material+Icons" />
+
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="/assets/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/academicons.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="canonical" href="/blog/2019/DQfD/">
+</head>
+<body>
+  <!-- Header -->
+  <nav id="navbar" class="navbar fixed-top navbar-expand-md grey lighten-5 z-depth-1 navbar-light">
+    <div class="container-fluid p-0">
+      
+        <a class="navbar-brand title font-weight-lighter" href="/"><span class="font-weight-bold">Sheel</span> Dey</a>
+      
+      <button class="navbar-toggler ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse text-right" id="navbarNav">
+        <ul class="navbar-nav ml-auto flex-nowrap">
+          <li class="nav-item ">
+            <a class="nav-link" href="/">
+              About
+              
+            </a>
+          </li>
+          
+            
+          
+            
+              <li class="nav-item ">
+                  <a class="nav-link" href="/blog/">
+                    Blog
+                    
+                  </a>
+              </li>
+            
+          
+            
+              <li class="nav-item ">
+                  <a class="nav-link" href="/cv/">
+                    Curriculum Vitae
+                    
+                  </a>
+              </li>
+            
+          
+            
+          
+            
+              <li class="nav-item ">
+                  <a class="nav-link" href="/projects/">
+                    Projects
+                    
+                  </a>
+              </li>
+            
+          
+            
+              <li class="nav-item ">
+                  <a class="nav-link" href="/publications/">
+                    Publications
+                    
+                  </a>
+              </li>
+            
+          
+            
+          
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Scrolling Progress Bar -->
+  <progress id="progress" value="0">
+    <div class="progress-container">
+      <span class="progress-bar"></span>
+    </div>
+  </progress>
+
+  <!-- Content -->
+  <div class="content">
+    <div class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Deep Q-learning from Demonstrations</h1>
+    <p class="post-meta">November 8, 2019</p>
+  </header>
+
+  <article class="post-content">
+    <p><strong>Paper:</strong> Download <a href="https://arxiv.org/abs/1704.03732" target="_blank">here</a><br />
+<strong>Authors:</strong> Todd Hester et. al<br />
+<strong>Published in:</strong> AAAI-18<br />
+<strong>In-depth Analysis:</strong> Daniel Sieta’s <a href="https://danieltakeshi.github.io/2019/04/30/il-and-rl/" target="_blank">post</a></p>
+
+<h3 id="takeaway-message">Takeaway message</h3>
+<p>Naively adding expert demonstration data to the replay buffer or pre-training an agent with this data does not offer benefits and sometimes can be detrimental. The combination of the supervised loss and the TD loss during pre-training is critical for the agent to learn a representation that is not rendered useless once training starts. During training the agent must continue using both the expert and the self-generated data using a prioritized experience replay. Demonstration data is used more as the number of iterations in the training phase increases. This is because the agent encounters new states in the game.</p>
+
+<h3 id="motivations">Motivations</h3>
+<p>Training DQN for real-world applications can be challenging as it requires huge amount of data. Accurate simulators aren’t available for many real-world tasks. The learning can be accelerated by using demonstration data to pre-train an agent so that it can perform well in the task from the start.</p>
+
+<h3 id="proposed-solution">Proposed Solution</h3>
+<p>The agent was pre-trained using 4 losses using the demonstration data.</p>
+
+<ol>
+  <li><em>Supervised loss:</em> Large margin loss to push the expert’s actions over other actions.</li>
+  <li><em>TD loss:</em> To help the agent learn the value function. It also ensures that the network satisfies the Bellman equation.</li>
+  <li><em>n-step (n=10) TD loss:</em> To help propagate the values of expert’s trajectory to earlier states.</li>
+  <li><em>L-2 regularization loss:</em> To prevent the agent from overfitting to the demonstration data.</li>
+</ol>
+
+<p>The large margin classifier forces the values of other actions to be at least a margin lower than the value of the expert’s action. This grounds the values of unseen actions to reasonable values and makes the greedy policy induced by the value function imitate the demonstrator.</p>
+
+<p>During training, the demonstration data is never overwritten in the replay buffer. Sampling is done using a prioritized experience replay buffer which also decides the ratio between demonstration and self-generated data. The supervised loss is omitted during training.</p>
+
+<h3 id="evaluation-of-the-solution">Evaluation of the solution</h3>
+<p>Comparison was made between DQfD, Prioritized Duelling Double (PDD) DQN, and imitation learning. DQfD results in large boost in initial performance. It acheives SOTA performance in 11 Atari games. DQfD performs well in the hardest exploration games (Montezuma’s Revenge, Pitfall, Private Eye) where demonstration data is used instead of intelligent exploration.</p>
+
+<h3 id="analysis-of-the-problem-idea-and-evaluation">Analysis of the problem, idea, and evaluation</h3>
+<p>The losses are designed to make the agent learn that other actions are less better than the expert action. So the goal is to create an agent that imitates the expert and the same time have a rough idea about the Q-values of the other states (unseen states) visited during the pre-training step.</p>
+
+<h3 id="contributions">Contributions</h3>
+<p>The paper presents a principled way to combine imitation learning with deep Q-learning as naive pre-training isn’t guaranteed to perform well.</p>
+
+<h3 id="questions">Questions</h3>
+<ol>
+  <li>How is the regularization loss helpful while training the RL agent? Doesn’t it result in sub-optimal behavior?</li>
+</ol>
+
+  </article>
+
+</div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    &copy; Copyright 2021 Sheelabhadra Dey.
+    
+    
+  </footer>
+
+  <!-- Core JavaScript Files -->
+  <script src="/assets/js/jquery.min.js" type="text/javascript"></script>
+  <script src="/assets/js/popper.min.js" type="text/javascript"></script>
+  <script src="/assets/js/bootstrap.min.js" type="text/javascript"></script>
+  <script src="/assets/js/mdb.min.js" type="text/javascript"></script>
+  <script async="" src="https://cdnjs.cloudflare.com/ajax/libs/masonry/4.2.2/masonry.pkgd.min.js" integrity="sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/imagesloaded@4/imagesloaded.pkgd.min.js"></script>
+  <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML"></script>
+  <script src="/assets/js/common.js"></script>
+
+  <!-- Scrolling Progress Bar -->
+  <script type="text/javascript">
+    $(document).ready(function() {
+      var navbarHeight = $('#navbar').outerHeight(true);
+      $('body').css({ 'padding-top': navbarHeight });
+      $('progress-container').css({ 'padding-top': navbarHeight });
+      var progressBar = $('#progress');
+      progressBar.css({ 'top': navbarHeight });
+      var getMax = function() { return $(document).height() - $(window).height(); }
+      var getValue = function() { return $(window).scrollTop(); }   
+      // Check if the browser supports the progress element.
+      if ('max' in document.createElement('progress')) {
+        // Set the 'max' attribute for the first time.
+        progressBar.attr({ max: getMax() });
+        progressBar.attr({ value: getValue() });
+    
+        $(document).on('scroll', function() {
+          // On scroll only the 'value' attribute needs to be calculated.
+          progressBar.attr({ value: getValue() });
+        });
+
+        $(window).resize(function() {
+          var navbarHeight = $('#navbar').outerHeight(true);
+          $('body').css({ 'padding-top': navbarHeight });
+          $('progress-container').css({ 'padding-top': navbarHeight });
+          progressBar.css({ 'top': navbarHeight });
+          // On resize, both the 'max' and 'value' attributes need to be calculated.
+          progressBar.attr({ max: getMax(), value: getValue() });
+        });
+      } else {
+        var max = getMax(), value, width;
+        var getWidth = function() {
+          // Calculate the window width as a percentage.
+          value = getValue();
+          width = (value/max) * 100;
+          width = width + '%';
+          return width;
+        }
+        var setWidth = function() { progressBar.css({ width: getWidth() }); };
+        setWidth();
+        $(document).on('scroll', setWidth);
+        $(window).on('resize', function() {
+          // Need to reset the 'max' attribute.
+          max = getMax();
+          setWidth();
+        });
+      }
+    });
+  </script>
+
+  <!-- Code Syntax Highlighting -->
+  <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet">
+  <script src="/assets/js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Script Used for Randomizing the Projects Order -->
+  <!-- <script type="text/javascript">
+    $.fn.shuffleChildren = function() {
+      $.each(this.get(), function(index, el) {
+        var $el = $(el);
+        var $find = $el.children();
+
+        $find.sort(function() {
+          return 0.5 - Math.random();
+        });
+
+        $el.empty();
+        $find.appendTo($el);
+      });
+    };
+    $("#projects").shuffleChildren();
+  </script> -->
+
+  <!-- Project Cards Layout -->
+  <script type="text/javascript">
+    var $grid = $('#projects');
+
+    // $grid.masonry({ percentPosition: true });
+    // $grid.masonry('layout');
+
+    // Trigger after images load.
+    $grid.imagesLoaded().progress(function() {
+      $grid.masonry({ percentPosition: true });
+      $grid.masonry('layout');
+    });
+  </script>
+
+  <!-- Enable Tooltips -->
+  <script type="text/javascript">
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip()
+    })
+  </script>
+
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', '', 'auto');
+    ga('send', 'pageview');
+  </script>
+</body>
+</html>

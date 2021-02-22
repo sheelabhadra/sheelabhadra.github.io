@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <title>Sheelabhadra Dey | Virtual to Real Reinforcement Learning for Autonomous Driving</title>
+  <meta name="description" content="Personal Website">
+
+  <!-- Fonts and Icons -->
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:100,300,400,500,700|Material+Icons" />
+
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="/assets/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/academicons.min.css">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="canonical" href="/blog/2019/virtual-to-real-RL/">
+</head>
+<body>
+  <!-- Header -->
+  <nav id="navbar" class="navbar fixed-top navbar-expand-md grey lighten-5 z-depth-1 navbar-light">
+    <div class="container-fluid p-0">
+      
+        <a class="navbar-brand title font-weight-lighter" href="/"><span class="font-weight-bold">Sheel</span> Dey</a>
+      
+      <button class="navbar-toggler ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse text-right" id="navbarNav">
+        <ul class="navbar-nav ml-auto flex-nowrap">
+          <li class="nav-item ">
+            <a class="nav-link" href="/">
+              About
+              
+            </a>
+          </li>
+          
+            
+          
+            
+              <li class="nav-item ">
+                  <a class="nav-link" href="/blog/">
+                    Blog
+                    
+                  </a>
+              </li>
+            
+          
+            
+              <li class="nav-item ">
+                  <a class="nav-link" href="/cv/">
+                    Curriculum Vitae
+                    
+                  </a>
+              </li>
+            
+          
+            
+          
+            
+              <li class="nav-item ">
+                  <a class="nav-link" href="/projects/">
+                    Projects
+                    
+                  </a>
+              </li>
+            
+          
+            
+              <li class="nav-item ">
+                  <a class="nav-link" href="/publications/">
+                    Publications
+                    
+                  </a>
+              </li>
+            
+          
+            
+          
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Scrolling Progress Bar -->
+  <progress id="progress" value="0">
+    <div class="progress-container">
+      <span class="progress-bar"></span>
+    </div>
+  </progress>
+
+  <!-- Content -->
+  <div class="content">
+    <div class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">Virtual to Real Reinforcement Learning for Autonomous Driving</h1>
+    <p class="post-meta">November 3, 2019</p>
+  </header>
+
+  <article class="post-content">
+    <p><strong>Paper:</strong> Download <a href="https://arxiv.org/abs/1704.03952" target="_blank">here</a><br />
+<strong>Video results:</strong> Watch <a href="https://www.youtube.com/watch?v=Bce2ZSlMuqY" target="_blank">here</a><br />
+<strong>Authors:</strong> Xinlei Pan, Yurong You, Ziyang Wang, Cewu Lu<br />
+<strong>Published in:</strong> BMVC 2017</p>
+
+<h3 id="takeaway-message">Takeaway message</h3>
+<p>The paper introduces a realistic translation network that uses 2 conditional GANs to generate realistic images from virtual images. The intermediate images is the segmentation map which is the common ground between the real-world and virtual images. An RL agent was trained on the synthesized realistic images using A3C.</p>
+
+<p align="center">
+  <img src="/assets/img/virtual_to_real_RL/image-translation-nw.png" width="720" />
+</p>
+
+<h3 id="motivations">Motivations</h3>
+<p>RL algorithms for autonomous driving are trained on simulators. The driving policy trained on simulators doesn’t translate well to the real-world due to the discrepancy between virtual images and their corresponding real-world images. But both the types of images have a common parsing structure (segmentation map) which can be exploited to generate realistic images in simulation.</p>
+
+<h3 id="proposed-solution">Proposed Solution</h3>
+<p>The approach consists of 2 image-to-image translation networks. The first network translates the virtual images to their segmentation maps and the second network translates segmented images into their realistic counterparts. Both the networks are GANs and have the same architecture. An A3C with 9 discrete actions is trained on the synthesized realistic images. The authors claim that this is a seminal work of adapting driving policy trained using simulations to the real-world.</p>
+
+<h3 id="evaluation-of-the-solution">Evaluation of the solution</h3>
+<p>Only the steering angle has been used for measuring error. TORCS was used for experiments. Cityscapes dataset was used to obtain the real-world images.
+Comparison has been made with respect to 3 A3C agents trained using 3 different approaches.</p>
+<ul>
+  <li><em>Oracle:</em> Training and testing on the same environment.</li>
+  <li><em>Proposed Method:</em> Training on syntehsized realistic images from E-track. Testing on Cg-track2. The image translation networks were trained on images from both the training and testing tracks.</li>
+  <li><em>Domain randomization:</em> Training on 10 different virtual environments. Testing on Cg-track2.</li>
+</ul>
+
+<h3 id="analysis-of-the-problem-idea-and-evaluation">Analysis of the problem, idea, and evaluation</h3>
+<p><strong>Pros</strong></p>
+<ul>
+  <li>It could work for simple scenarios such as highway driving.</li>
+  <li>It Works better than domain randomization method.</li>
+</ul>
+
+<p><strong>Cons</strong></p>
+<ul>
+  <li>The lane lines aren’t preserved in this approach ( <em>NOTE: this may be a limitation of pix2pix</em> ).</li>
+  <li>The synthesized real images are not always trust-worthy i.e. appearance road intersections even when they are not present in the ground truth data.</li>
+  <li>Difficult for the approach to work for urban driving scenarios.</li>
+  <li>The evaluation strategy predicts <em>only</em> steering angles and is hand-crafted since the actions are discrete.</li>
+</ul>
+
+<h3 id="contributions">Contributions</h3>
+<p>In general, the approach can generate a decent representation of road, trees, buildings, sky, grass, and sidewalks. The network architecture of the GANs and the A3C DRL, hyperparameters, and training data details have been provided by the authors.</p>
+
+<h3 id="future-directions">Future directions</h3>
+<ul>
+  <li>Segmentation maps are not unique. Adding info regarding the color and texture of objects.</li>
+  <li>Addition of more complex scenarios such as cars, traffic lights, road-signs, and pedestrians.</li>
+</ul>
+
+<h3 id="questions">Questions</h3>
+<ul>
+  <li>What are the advantages of this approach over training an RL agent on the segmentation map? Personally I think that this would be easier to train.</li>
+</ul>
+
+  </article>
+
+</div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    &copy; Copyright 2021 Sheelabhadra Dey.
+    
+    
+  </footer>
+
+  <!-- Core JavaScript Files -->
+  <script src="/assets/js/jquery.min.js" type="text/javascript"></script>
+  <script src="/assets/js/popper.min.js" type="text/javascript"></script>
+  <script src="/assets/js/bootstrap.min.js" type="text/javascript"></script>
+  <script src="/assets/js/mdb.min.js" type="text/javascript"></script>
+  <script async="" src="https://cdnjs.cloudflare.com/ajax/libs/masonry/4.2.2/masonry.pkgd.min.js" integrity="sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/imagesloaded@4/imagesloaded.pkgd.min.js"></script>
+  <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML"></script>
+  <script src="/assets/js/common.js"></script>
+
+  <!-- Scrolling Progress Bar -->
+  <script type="text/javascript">
+    $(document).ready(function() {
+      var navbarHeight = $('#navbar').outerHeight(true);
+      $('body').css({ 'padding-top': navbarHeight });
+      $('progress-container').css({ 'padding-top': navbarHeight });
+      var progressBar = $('#progress');
+      progressBar.css({ 'top': navbarHeight });
+      var getMax = function() { return $(document).height() - $(window).height(); }
+      var getValue = function() { return $(window).scrollTop(); }   
+      // Check if the browser supports the progress element.
+      if ('max' in document.createElement('progress')) {
+        // Set the 'max' attribute for the first time.
+        progressBar.attr({ max: getMax() });
+        progressBar.attr({ value: getValue() });
+    
+        $(document).on('scroll', function() {
+          // On scroll only the 'value' attribute needs to be calculated.
+          progressBar.attr({ value: getValue() });
+        });
+
+        $(window).resize(function() {
+          var navbarHeight = $('#navbar').outerHeight(true);
+          $('body').css({ 'padding-top': navbarHeight });
+          $('progress-container').css({ 'padding-top': navbarHeight });
+          progressBar.css({ 'top': navbarHeight });
+          // On resize, both the 'max' and 'value' attributes need to be calculated.
+          progressBar.attr({ max: getMax(), value: getValue() });
+        });
+      } else {
+        var max = getMax(), value, width;
+        var getWidth = function() {
+          // Calculate the window width as a percentage.
+          value = getValue();
+          width = (value/max) * 100;
+          width = width + '%';
+          return width;
+        }
+        var setWidth = function() { progressBar.css({ width: getWidth() }); };
+        setWidth();
+        $(document).on('scroll', setWidth);
+        $(window).on('resize', function() {
+          // Need to reset the 'max' attribute.
+          max = getMax();
+          setWidth();
+        });
+      }
+    });
+  </script>
+
+  <!-- Code Syntax Highlighting -->
+  <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet">
+  <script src="/assets/js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+
+  <!-- Script Used for Randomizing the Projects Order -->
+  <!-- <script type="text/javascript">
+    $.fn.shuffleChildren = function() {
+      $.each(this.get(), function(index, el) {
+        var $el = $(el);
+        var $find = $el.children();
+
+        $find.sort(function() {
+          return 0.5 - Math.random();
+        });
+
+        $el.empty();
+        $find.appendTo($el);
+      });
+    };
+    $("#projects").shuffleChildren();
+  </script> -->
+
+  <!-- Project Cards Layout -->
+  <script type="text/javascript">
+    var $grid = $('#projects');
+
+    // $grid.masonry({ percentPosition: true });
+    // $grid.masonry('layout');
+
+    // Trigger after images load.
+    $grid.imagesLoaded().progress(function() {
+      $grid.masonry({ percentPosition: true });
+      $grid.masonry('layout');
+    });
+  </script>
+
+  <!-- Enable Tooltips -->
+  <script type="text/javascript">
+    $(function () {
+      $('[data-toggle="tooltip"]').tooltip()
+    })
+  </script>
+
+  <!-- Google Analytics -->
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', '', 'auto');
+    ga('send', 'pageview');
+  </script>
+</body>
+</html>
